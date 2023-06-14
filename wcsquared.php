@@ -15,15 +15,14 @@
  use Square\Exceptions\ApiException;
 
 class WC_Squared {
-
     private $client;
+    private $api_key;
 
-    // initial setup
-
+    // Initial setup
     public function __construct() {
-    
+        $this->api_key = get_option('wc_squared_api_key');
         $this->client = new SquareClient([
-            'accessToken' => SQUARE_ACCESS_TOKEN,
+            'accessToken' => $this->api_key,
             'environment' => Environment::SANDBOX,
         ]);
             
@@ -33,6 +32,7 @@ class WC_Squared {
         add_action('wp_ajax_my_action', array($this, 'ajax_handler'));
         add_action('woocommerce_add_to_cart_validation', array($this, 'validate_delivery_option'), 10, 3);
         add_action('wp_ajax_get_places', array($this, 'sync_locations_handler'));
+        add_action('wp_ajax_save_api_key', array($this, 'save_api_key_handler'));
         
         if (is_admin()) {
             add_action('admin_menu', array($this, 'my_plugin_menu'));
@@ -114,12 +114,39 @@ class WC_Squared {
     // admin stuff
 
     public function my_plugin_menu() {
-        add_menu_page('WC Squared Admin', 'WC Squared', 'manage_options', 'location-sync', array($this, 'location_sync_page'));
+        add_menu_page('WC Squared Admin', 'WC Squared', 'manage_options', 'location-sync', array($this, 'wc_admin_page'));
     }
 
-    public function location_sync_page() {
-        echo '<h1>Sync Locations</h1>';
-        echo '<button id="sync-button">Sync with Square</button>';
+    public function wc_admin_page() {
+
+        $api_key = get_option('wc_squared_api_key');
+    
+        echo '<h1>WC Squared</h1>';
+        if (!$this->isApiKeyValid($api_key)) {
+            echo '<h5>Incorrect or empty key</h5>';
+        }
+        // Show API key input and save button if API key is not set or incorrect
+        if (empty($api_key) || !$this->isApiKeyValid($api_key)) {
+            echo '<label for="api-key">Square API Key:</label>';
+            echo '<input type="text" id="api-key" name="api-key" value="">';
+            echo '<button id="save-key-button">Save API Key</button><br><br>';        
+        } else {
+            // API key is set and valid, show other content
+            echo '<button id="sync-button">Sync Locations</button>';
+            echo '<p>Note: Enter your Square API key above and click "Save API Key" to link your account.</p>';
+        }
+    }
+
+    public function save_api_key_handler() {
+        // Retrieve the API key from the AJAX request data
+        $api_key = $_POST['api_key'];
+
+        // Save the API key using the WordPress Options API
+        update_option('wc_squared_api_key', $api_key);
+
+        // Return a response (optional)
+        $response = array('message' => 'API key saved successfully');
+        wp_send_json_success($response);            
     }
             
     public function sync_locations_handler() {
@@ -167,6 +194,20 @@ class WC_Squared {
         }
         wp_die();
     }
+
+    private function isApiKeyValid($api_key) {
+        $client = new SquareClient([
+            'accessToken' => $api_key,
+            'environment' => Environment::SANDBOX,
+        ]);
+    
+        try {
+            $api_response = $client->getLocationsApi()->listLocations();
+            return $api_response->isSuccess();
+        } catch (ApiException $e) {
+            return false;
+        }
+    }    
 }
 
 // Instantiating the class.
