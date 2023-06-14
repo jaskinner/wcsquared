@@ -32,6 +32,7 @@ jQuery(document).ready(function($){
     });
 
     $('#sync-button').click(syncWithSquare);
+    $('#save-key-button').click(saveApiKey);
 });
 
 function syncWithSquare() {
@@ -40,6 +41,25 @@ function syncWithSquare() {
         type: 'post',
         data: {
             action: 'get_places'
+        },
+        success: function(response) {
+            // Here you can handle the response, which contains the locations
+            console.log(response);
+        },
+        error: function(error) {
+            // Here you can handle any errors that occurred during the request
+            console.log(error);
+        }
+    });
+}
+
+function saveApiKey() {
+    jQuery.ajax({
+        url: my_ajax_object.ajax_url,
+        type: 'post',
+        data: {
+            action: 'save_api_key',
+            api_key: jQuery('#api-key').val() // Replace 'api-key-input' with the ID of your input field
         },
         success: function(response) {
             // Here you can handle the response, which contains the locations
