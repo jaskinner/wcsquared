@@ -21,11 +21,16 @@ class WC_Squared {
 	// Initial setup
 	public function __construct() {
 		$this->api_key = get_option('wc_squared_api_key');
-		$this->client = new SquareClient([
-			'accessToken' => $this->api_key,
-			'environment' => Environment::SANDBOX,
-		]);
-
+		
+		if (empty($this->api_key)) {
+			add_action('admin_notices', array($this, 'display_api_key_notice'));
+		} else {
+			$this->client = new SquareClient([
+				'accessToken' => $this->api_key,
+				'environment' => Environment::SANDBOX,
+			]);
+		}
+		
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
 		add_action('woocommerce_before_add_to_cart_button', array($this, 'add_content_before_addtocart'));
@@ -36,12 +41,16 @@ class WC_Squared {
 		add_action('wp_ajax_save_api_key', array($this, 'save_api_key_handler'));
 		add_action('wp_ajax_get_pickup_locations', array($this, 'get_pickup_locations_handler'));
 		add_action('wp_ajax_nopriv_get_pickup_locations', array($this, 'get_pickup_locations_handler'));
-
+		
 		if (is_admin()) {
 			add_action('admin_menu', array($this, 'my_plugin_menu'));
 		}
 	}
-
+	
+	public function display_api_key_notice() {
+		echo '<div class="notice notice-error"><p>Please enter your Square API Key in the plugin settings.</p></div>';
+	}
+	
 	// Activation hook
 	public static function activate() {
 		global $wpdb;
@@ -60,6 +69,12 @@ class WC_Squared {
 
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
+
+		// Create the API key option if it doesn't exist
+		$api_key = get_option('wc_squared_api_key');
+		if (empty($api_key)) {
+			add_option('wc_squared_api_key', '');
+		}
 	}
 
 	public function enqueue_admin_scripts() {
@@ -90,7 +105,7 @@ class WC_Squared {
 
 	public function add_content_before_addtocart() {
 		echo
-				'<div id="shipping-pickup-options">
+			'<div id="shipping-pickup-options">
 				<input type="radio" id="shipping" name="delivery" value="shipping">
 				<label for="shipping">Shipping</label><br>
 				<input type="radio" id="pickup" name="delivery" value="pickup">
