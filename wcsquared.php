@@ -131,9 +131,14 @@ class WC_Squared {
     
         if ($api_response->isSuccess()) {
             $result = $api_response->getResult();
-    
+            
             // Loop over each location.
             foreach ($result->getLocations() as $location) {
+                
+                if ($location->getStatus() === "INACTIVE") {
+                    continue;
+                }
+
                 // Extract properties from the location.
                 $locationId = $location->getId();
                 $name = $location->getName();
@@ -155,13 +160,14 @@ class WC_Squared {
                     )
                 );
             }
+
         } else {
             $errors = $api_response->getErrors();
             // Handle errors here...
         }
         wp_die();
     }
-    }
+}
 
 // Instantiating the class.
 $wc_squared = new WC_Squared();
