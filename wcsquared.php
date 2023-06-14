@@ -15,15 +15,14 @@
  use Square\Exceptions\ApiException;
 
 class WC_Squared {
-
     private $client;
+    private $api_key;
 
-    // initial setup
-
+    // Initial setup
     public function __construct() {
-    
+        $this->api_key = get_option('wc_squared_api_key');
         $this->client = new SquareClient([
-            'accessToken' => SQUARE_ACCESS_TOKEN,
+            'accessToken' => $this->api_key,
             'environment' => Environment::SANDBOX,
         ]);
             
@@ -119,12 +118,23 @@ class WC_Squared {
     }
 
     public function wc_admin_page() {
+
+        $api_key = get_option('wc_squared_api_key');
+    
         echo '<h1>WC Squared</h1>';
-        echo '<label for="api-key">Square API Key:</label>';
-        echo '<input type="text" id="api-key" name="api-key" value="">';
-        echo '<button id="save-key-button">Save API Key</button><br><br>';
-        echo '<button id="sync-button">Sync Locations</button>';
-        echo '<p>Note: Enter your Square API key above and click "Save API Key" to link your account.</p>';
+        if (!$this->isApiKeyValid($api_key)) {
+            echo '<h5>Incorrect or empty key</h5>';
+        }
+        // Show API key input and save button if API key is not set or incorrect
+        if (empty($api_key) || !$this->isApiKeyValid($api_key)) {
+            echo '<label for="api-key">Square API Key:</label>';
+            echo '<input type="text" id="api-key" name="api-key" value="">';
+            echo '<button id="save-key-button">Save API Key</button><br><br>';        
+        } else {
+            // API key is set and valid, show other content
+            echo '<button id="sync-button">Sync Locations</button>';
+            echo '<p>Note: Enter your Square API key above and click "Save API Key" to link your account.</p>';
+        }
     }
 
     public function save_api_key_handler() {
@@ -184,6 +194,20 @@ class WC_Squared {
         }
         wp_die();
     }
+
+    private function isApiKeyValid($api_key) {
+        $client = new SquareClient([
+            'accessToken' => $api_key,
+            'environment' => Environment::SANDBOX,
+        ]);
+    
+        try {
+            $api_response = $client->getLocationsApi()->listLocations();
+            return $api_response->isSuccess();
+        } catch (ApiException $e) {
+            return false;
+        }
+    }    
 }
 
 // Instantiating the class.
