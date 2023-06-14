@@ -42,9 +42,9 @@ class WC_Squared_Admin {
 		$api_key = get_option('wc_squared_api_key');
 
 		echo '<h1>WC Squared</h1>';
-		// if (!$this->isApiKeyValid($api_key)) {
-		// 	echo '<h5>Incorrect or empty key</h5>';
-		// }
+		if (!$this->isApiKeyValid($api_key)) {
+			echo '<h5>Incorrect or empty key</h5>';
+		}
 		// Show API key input and save button if API key is not set or incorrect
 		if (empty($api_key) || !$this->isApiKeyValid($api_key)) {
 			echo '<label for="api-key">Square API Key:</label>';
