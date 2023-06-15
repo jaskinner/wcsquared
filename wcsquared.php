@@ -42,31 +42,54 @@ class WC_Squared {
 		echo '<div class="notice notice-error"><p>Please enter your Square API Key in the plugin settings.</p></div>';
 	}
 	
-	// Activation hook
-	public static function activate() {
-		global $wpdb;
+    // Activation hook
+    public static function activate() {
+        global $wpdb;
 
-		$charset_collate = $wpdb->get_charset_collate();
-		$table_name = $wpdb->prefix . 'wc_squared_locations';
+        $charset_collate = $wpdb->get_charset_collate();
+        $table_name_locations = $wpdb->prefix . 'wc_squared_locations';
+        $table_name_imported_products = $wpdb->prefix . 'wc_squared_imported_products';
+        $table_name_inventory = $wpdb->prefix . 'wc_squared_inventory';
 
-		$sql = "CREATE TABLE $table_name (
-			id varchar(55) NOT NULL,
-			name varchar(55) NOT NULL,
-			address_line varchar(255) DEFAULT '' NOT NULL,
-			locality varchar(55) DEFAULT '' NOT NULL,
-			administrative_district varchar(55) DEFAULT '' NOT NULL,
-			PRIMARY KEY  (id)
-		  ) $charset_collate;";
+        // Create the wc_squared_locations table
+        $sql_locations = "CREATE TABLE $table_name_locations (
+            id varchar(55) NOT NULL,
+            name varchar(55) NOT NULL,
+            address_line varchar(255) DEFAULT '' NOT NULL,
+            locality varchar(55) DEFAULT '' NOT NULL,
+            administrative_district varchar(55) DEFAULT '' NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
 
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-		dbDelta($sql);
+        // Create the wc_squared_imported_products table
+        $sql_imported_products = "CREATE TABLE $table_name_imported_products (
+            product_id bigint(20) NOT NULL,
+            location_id varchar(55) NOT NULL,
+            PRIMARY KEY  (product_id, location_id),
+            FOREIGN KEY (location_id) REFERENCES $table_name_locations (id)
+        ) $charset_collate;";
 
-		// Create the API key option if it doesn't exist
-		$api_key = get_option('wc_squared_api_key');
-		if (empty($api_key)) {
-			add_option('wc_squared_api_key', '');
-		}
-	}
+        // Create the wc_squared_inventory table
+        $sql_inventory = "CREATE TABLE $table_name_inventory (
+            product_id bigint(20) NOT NULL,
+            location_id varchar(55) NOT NULL,
+            quantity int(11) DEFAULT 0,
+            PRIMARY KEY  (product_id, location_id),
+            -- FOREIGN KEY (product_id) REFERENCES $wpdb->posts (ID),
+            FOREIGN KEY (location_id) REFERENCES $table_name_locations (id)
+        ) $charset_collate;";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta($sql_locations);
+        dbDelta($sql_imported_products);
+        dbDelta($sql_inventory);
+
+        // Create the API key option if it doesn't exist
+        $api_key = get_option('wc_squared_api_key');
+        if (empty($api_key)) {
+            add_option('wc_squared_api_key', '');
+        }
+    }
 }
 
 // Instantiating the class.
