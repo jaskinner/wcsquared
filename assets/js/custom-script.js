@@ -20,58 +20,6 @@ jQuery(document).ready(function ($) {
 		$('#pickup-location').show();
 		getLocations();
 	});
-
-	// show required label if needed
-
-	$('.single_add_to_cart_button').click(function (e) {
-		if (!$('#shipping').is(':checked') && !$('#pickup').is(':checked')) {
-			e.preventDefault();
-			$('#delivery-required').show();
-		} else {
-			$('#delivery-required').hide();
-		}
-	});
-
-	$('#sync-button').click(syncWithSquare);
-	$('#save-key-button').click(saveApiKey);
-
-
-	function syncWithSquare() {
-		jQuery.ajax({
-			url: my_ajax_object.ajax_url,
-			type: 'post',
-			data: {
-				action: 'get_places'
-			},
-			success: function (response) {
-				// Here you can handle the response, which contains the locations
-				console.log(response);
-			},
-			error: function (error) {
-				// Here you can handle any errors that occurred during the request
-				console.log(error);
-			}
-		});
-	}
-	
-	function saveApiKey() {
-		jQuery.ajax({
-			url: my_ajax_object.ajax_url,
-			type: 'post',
-			data: {
-				action: 'save_api_key',
-				api_key: $('#api-key').val() // Replace 'api-key-input' with the ID of your input field
-			},
-			success: function (response) {
-				// Here you can handle the response, which contains the locations
-				console.log(response);
-			},
-			error: function (error) {
-				// Here you can handle any errors that occurred during the request
-				console.log(error);
-			}
-		});
-	}
 	
 	function getLocations() {
 		jQuery.ajax({
@@ -81,6 +29,7 @@ jQuery(document).ready(function ($) {
 				action: 'get_pickup_locations'
 			},
 			success: function (response) {
+				console.log(response);
 				updateLocationDropdown(response);
 			},
 			error: function (xhr, status, error) {
