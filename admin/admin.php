@@ -15,7 +15,7 @@ class WC_Squared_Admin {
 		$this->api_key = $api_key;
 		$this->client = $client;
 
-		add_action('wp_ajax_get_places', array($this, 'sync_locations_handler'));
+		add_action('wp_ajax_get_places', array(__CLASS__, 'sync_locations_handler'));
 		add_action('wp_ajax_save_api_key', array($this, 'save_api_key_handler'));
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
 		add_filter( 'woocommerce_settings_tabs_array', __CLASS__ . '::add_settings_tab', 50 );
@@ -70,7 +70,15 @@ class WC_Squared_Admin {
 	 * @uses self::get_settings()
 	 */
 	public static function update_settings() {
-		woocommerce_update_options( self::get_settings() );
+		$settings = self::get_settings();
+		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
+	
+		// Call the sync_locations_handler function if the checkbox is checked.
+		if ( 'yes' === $sync_checkbox ) {
+			self::sync_locations_handler();
+		}
+	
+		woocommerce_update_options( $settings );
 	}
 
 	/**
@@ -91,6 +99,13 @@ class WC_Squared_Admin {
 				'type' => 'password',
 				'desc' => __( 'Enter your Square API key', 'wcsquared-settings-tab' ),
 				'id'   => 'wc_squared_api_key',
+			),
+			'sync_checkbox' => array(
+				'name'    => __( 'Sync Locations', 'wc-squared' ),
+				'type'    => 'checkbox',
+				'desc'    => __( 'Check this box to sync locations.', 'wc-squared' ),
+				'id'      => 'wc_squared_sync_checkbox',
+				'default' => 'no',
 			),
 			'section_end' => array(
 				'type' => 'sectionend',
@@ -115,12 +130,18 @@ class WC_Squared_Admin {
 		}
 	}
 
-	public function sync_locations_handler() {
+	public static function sync_locations_handler() {
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'wc_squared_locations';
 
-		$api_response = $this->client->getLocationsApi()->listLocations();
+		$api_key = get_option('wc_squared_api_key');
+		$client = new SquareClient([
+			'accessToken' => $api_key,
+			'environment' => Environment::SANDBOX,
+		]);
+	
+		$api_response = $client->getLocationsApi()->listLocations();
 
 		if ($api_response->isSuccess()) {
 			$result = $api_response->getResult();
@@ -157,6 +178,6 @@ class WC_Squared_Admin {
 			$errors = $api_response->getErrors();
 			// Handle errors here...
 		}
-		wp_die();
+		// wp_die();
 	}
 }
