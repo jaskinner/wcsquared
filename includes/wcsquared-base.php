@@ -12,8 +12,6 @@
 
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
 		add_action('woocommerce_before_add_to_cart_button', array($this, 'add_content_before_addtocart'));
-		add_action('wp_ajax_nopriv_my_action', array($this, 'ajax_handler'));
-		add_action('wp_ajax_my_action', array($this, 'ajax_handler'));
 		add_action('woocommerce_add_to_cart_validation', array($this, 'validate_delivery_option'), 10, 3);
 		add_action('wp_ajax_get_pickup_locations', array($this, 'get_pickup_locations_handler'));
 		add_action('wp_ajax_nopriv_get_pickup_locations', array($this, 'get_pickup_locations_handler'));    
@@ -53,5 +51,18 @@
 			wc_add_notice('Please choose either Shipping or Pickup before proceeding.', 'error');
 			return false;
 		}
+	}
+
+	public function get_pickup_locations_handler() {
+		global $wpdb;
+    
+		$table_name = $wpdb->prefix . 'wc_squared_locations';
+	
+		$active_locations = $wpdb->get_results(
+			"SELECT * FROM $table_name"
+		);
+	
+		// Return the active locations
+		wp_send_json($active_locations);
 	}
 }
