@@ -15,10 +15,12 @@ class WC_Squared_Admin {
 		$this->api_key = $api_key;
 		$this->client = $client;
 
-		add_action('wp_ajax_get_places', array($this, 'sync_locations_handler'));
+		add_action('wp_ajax_get_places', array(__CLASS__, 'sync_locations_handler'));
 		add_action('wp_ajax_save_api_key', array($this, 'save_api_key_handler'));
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-        add_action('admin_menu', array($this, 'my_plugin_menu'));
+		add_filter( 'woocommerce_settings_tabs_array', __CLASS__ . '::add_settings_tab', 50 );
+        add_action( 'woocommerce_settings_tabs_wcsquared_tab', __CLASS__ . '::settings_tab' );
+        add_action( 'woocommerce_update_options_wcsquared_tab', __CLASS__ . '::update_settings' );
 	}
 
 	public function enqueue_admin_scripts() {
@@ -34,30 +36,87 @@ class WC_Squared_Admin {
 		wp_localize_script('my-plugin-custom-script', 'my_ajax_object', array('ajax_url' => admin_url('admin-ajax.php')));
 	}
 
-	public function my_plugin_menu() {
-		add_menu_page('WC Squared Admin', 'WC Squared', 'manage_options', 'location-sync', array($this, 'wc_admin_page'));
-	}
+    /**
+     * Add a new settings tab to the WooCommerce settings tabs array.
+     *
+     * @param array $settings_tabs Array of WooCommerce setting tabs & their labels, excluding the Subscription tab.
+     * @return array $settings_tabs Array of WooCommerce setting tabs & their labels, including the Subscription tab.
+     */
+    public static function add_settings_tab( $settings_tabs ) {
+        $settings_tabs['wcsquared_tab'] = __( 'WC Squared', 'wcsquared-tab' );
+        return $settings_tabs;
+    }
 
-	public function wc_admin_page() {
+	/**
+	 * Uses the WooCommerce admin fields API to output settings via the @see woocommerce_admin_fields() function.
+	 *
+	 * @uses woocommerce_admin_fields()
+	 * @uses self::get_settings()
+	 */
+	public static function settings_tab() {
+		woocommerce_admin_fields( self::get_settings() );
+
 		$api_key = get_option('wc_squared_api_key');
 
-		echo '<h1>WC Squared</h1>';
-		if (!$this->isApiKeyValid($api_key)) {
+		if (!self::isApiKeyValid($api_key)) {
 			echo '<h5>Incorrect or empty key</h5>';
-		}
-		// Show API key input and save button if API key is not set or incorrect
-		if (empty($api_key) || !$this->isApiKeyValid($api_key)) {
-			echo '<label for="api-key">Square API Key:</label>';
-			echo '<input type="text" id="api-key" name="api-key" value="">';
-			echo '<button id="save-key-button">Save API Key</button><br><br>';
-		} else {
-			// API key is set and valid, show other content
-			echo '<button id="sync-button">Sync Locations</button>';
-			echo '<p>Note: Enter your Square API key above and click "Save API Key" to link your account.</p>';
 		}
 	}
 
-	private function isApiKeyValid($api_key) {
+	/**
+	 * Uses the WooCommerce options API to save settings via the @see woocommerce_update_options() function.
+	 *
+	 * @uses woocommerce_update_options()
+	 * @uses self::get_settings()
+	 */
+	public static function update_settings() {
+		$settings = self::get_settings();
+		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
+	
+		// Call the sync_locations_handler function if the checkbox is checked.
+		if ( 'yes' === $sync_checkbox ) {
+			self::sync_locations_handler();
+		}
+	
+		woocommerce_update_options( $settings );
+	}
+
+	/**
+	 * Get all the settings for this plugin for @see woocommerce_admin_fields() function.
+	 *
+	 * @return array Array of settings for @see woocommerce_admin_fields().
+	 */
+	public static function get_settings() {
+		$settings = array(
+			'section_title' => array(
+				'name'     => __( 'WC SQUARED SETTINGS', 'wcsquared-settings-tab' ),
+				'type'     => 'title',
+				'desc'     => '',
+				'id'       => 'wcsquared_tab_section_title'
+			),
+			'title' => array(
+				'name' => __( 'API KEY', 'wcsquared-settings-tab' ),
+				'type' => 'password',
+				'desc' => __( 'Enter your Square API key', 'wcsquared-settings-tab' ),
+				'id'   => 'wc_squared_api_key',
+			),
+			'sync_checkbox' => array(
+				'name'    => __( 'Sync Locations', 'wc-squared' ),
+				'type'    => 'checkbox',
+				'desc'    => __( 'Check this box to sync locations.', 'wc-squared' ),
+				'id'      => 'wc_squared_sync_checkbox',
+				'default' => 'no',
+			),
+			'section_end' => array(
+				'type' => 'sectionend',
+				'id'   => 'wc_squared_section_end'
+			),
+		);
+
+		return apply_filters( 'wcsquared_tab_settings', $settings );
+	}
+
+	private static function isApiKeyValid($api_key) {
 		$client = new SquareClient([
 			'accessToken' => $api_key,
 			'environment' => Environment::SANDBOX,
@@ -71,24 +130,18 @@ class WC_Squared_Admin {
 		}
 	}
 
-	public function save_api_key_handler() {
-		// Retrieve the API key from the AJAX request data
-		$api_key = $_POST['api_key'];
-
-		// Save the API key using the WordPress Options API
-		update_option('wc_squared_api_key', $api_key);
-
-		// Return a response (optional)
-		$response = array('message' => 'API key saved successfully');
-		wp_send_json_success($response);
-	}
-
-	public function sync_locations_handler() {
+	public static function sync_locations_handler() {
 		global $wpdb;
 
 		$table_name = $wpdb->prefix . 'wc_squared_locations';
 
-		$api_response = $this->client->getLocationsApi()->listLocations();
+		$api_key = get_option('wc_squared_api_key');
+		$client = new SquareClient([
+			'accessToken' => $api_key,
+			'environment' => Environment::SANDBOX,
+		]);
+	
+		$api_response = $client->getLocationsApi()->listLocations();
 
 		if ($api_response->isSuccess()) {
 			$result = $api_response->getResult();
@@ -125,6 +178,6 @@ class WC_Squared_Admin {
 			$errors = $api_response->getErrors();
 			// Handle errors here...
 		}
-		wp_die();
+		// wp_die();
 	}
 }
