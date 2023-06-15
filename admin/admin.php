@@ -71,14 +71,15 @@ class WC_Squared_Admin {
 	 */
 	public static function update_settings() {
 		$settings = self::get_settings();
+	
+		woocommerce_update_options( $settings );
+	
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
 	
 		// Call the sync_locations_handler function if the checkbox is checked.
 		if ( 'yes' === $sync_checkbox ) {
 			self::sync_locations_handler();
 		}
-	
-		woocommerce_update_options( $settings );
 	}
 
 	/**
