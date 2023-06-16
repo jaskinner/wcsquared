@@ -16,9 +16,6 @@ class DatabaseHandler {
     }
 
     public function createLocationsTable() {
-        global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
 
         // Create the wc_squared_locations table
         $sql = "CREATE TABLE $this->table_name_locations (
@@ -28,15 +25,12 @@ class DatabaseHandler {
             locality varchar(55) DEFAULT '' NOT NULL,
             administrative_district varchar(55) DEFAULT '' NOT NULL,
             PRIMARY KEY  (id)
-        ) $charset_collate;";
+        )";
         
         $this->executeQuery($sql);
     }
 
     public function createImportedProductsTable() {
-        global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
 
         // Create the wc_squared_imported_products table
         $sql = "CREATE TABLE $this->table_name_imported_products (
@@ -44,15 +38,12 @@ class DatabaseHandler {
             location_id varchar(55) NOT NULL,
             PRIMARY KEY  (product_id, location_id),
             FOREIGN KEY (location_id) REFERENCES $this->table_name_locations (id)
-        ) $charset_collate;";
+        )";
         
         $this->executeQuery($sql);
     }
 
     public function createInventoryTable() {
-        global $wpdb;
-
-        $charset_collate = $wpdb->get_charset_collate();
 
         // Create the wc_squared_inventory table
         $sql = "CREATE TABLE $this->table_name_inventory (
@@ -62,13 +53,18 @@ class DatabaseHandler {
             PRIMARY KEY  (product_id, location_id),
             FOREIGN KEY (product_id) REFERENCES $this->table_name_imported_products (product_id),
             FOREIGN KEY (location_id) REFERENCES $this->table_name_locations (id)
-        ) $charset_collate;";
+        )";
         
         $this->executeQuery($sql);
     }
 
     private function executeQuery($sql_query) {
         global $wpdb;
+    
+        $charset_collate = $wpdb->get_charset_collate();
+    
+        // Append the charset collation to the SQL query
+        $sql_query .= " $charset_collate;";
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql_query);
     }    
