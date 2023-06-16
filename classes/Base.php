@@ -1,14 +1,10 @@
 <?php
 /**
- * WC Squared Base
+ * Base
  */
 
- class WC_Squared_Base {
-	private $api_key;
-
-	public function __construct($api_key) {
-
-		$this->api_key = $api_key;
+class Base {
+	public function __construct() {
 
 		add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
 		add_action('woocommerce_before_add_to_cart_button', array($this, 'add_content_before_addtocart'));

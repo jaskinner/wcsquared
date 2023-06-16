@@ -1,13 +1,13 @@
 <?php
 /**
- * WC Squared Admin
+ * Admin
  */
 
 use Square\SquareClient;
 use Square\Environment;
 use Square\Exceptions\ApiException;
  
-class WC_Squared_Admin {
+class Admin {
 
 	public function __construct() {
 

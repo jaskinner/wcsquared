@@ -9,38 +9,17 @@
  **/
 
 require 'vendor/autoload.php';
-require 'admin/admin.php';
-require 'includes/wcsquared-base.php';
-
-use Square\SquareClient;
-use Square\Environment;
+require 'autoload.php';
 
 class WC_Squared {
-	private $client;
-	private $api_key;
     private $ui;
     private $admin;
 
 	// Initial setup
 	public function __construct() {
-		$this->api_key = get_option('wc_squared_api_key');
-		
-		if (empty($this->api_key)) {
-			add_action('admin_notices', array($this, 'display_api_key_notice'));
-		} else {
-			$this->client = new SquareClient([
-				'accessToken' => $this->api_key,
-				'environment' => Environment::SANDBOX,
-			]);
-		}
-
-        $this->admin = new WC_Squared_Admin($this->api_key, $this->client);
-        $this->ui = new WC_Squared_Base($this->api_key, $this->client);
-	}
-	
-	public function display_api_key_notice() {
-		echo '<div class="notice notice-error"><p>Please enter your Square API Key in the plugin settings.</p></div>';
-	}
+        $this->admin = new Admin();
+        $this->ui = new Base();
+    }
 	
     // Activation hook
     public static function activate() {
