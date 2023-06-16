@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => '__root__',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => NULL,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '487de6c630353b187b59bdf2fde5d3fe9328bb31',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,18 +11,18 @@
     ),
     'versions' => array(
         '__root__' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => NULL,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '487de6c630353b187b59bdf2fde5d3fe9328bb31',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
             'dev_requirement' => false,
         ),
         'apimatic/core' => array(
-            'pretty_version' => '0.3.0',
-            'version' => '0.3.0.0',
-            'reference' => '55cc76f589a62661673ebd5fdf98614d907bf276',
+            'pretty_version' => '0.3.1',
+            'version' => '0.3.1.0',
+            'reference' => '8e7154a40a1c14f34294357f3a8e03541ddf4714',
             'type' => 'library',
             'install_path' => __DIR__ . '/../apimatic/core',
             'aliases' => array(),
