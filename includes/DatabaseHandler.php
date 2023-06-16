@@ -3,6 +3,10 @@
  * Database Handler
  */
 
+use Square\SquareClient;
+use Square\Environment;
+use Square\Exceptions\ApiException;
+
 class DatabaseHandler {
     private $table_name_imported_products;
     private $table_name_inventory;
@@ -56,6 +60,55 @@ class DatabaseHandler {
         )";
         
         $this->executeQuery($sql);
+    }
+
+	public static function syncLocations() {
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'wc_squared_locations';
+
+        $api_key = get_option('wc_squared_api_key');
+        $client = new SquareClient([
+            'accessToken' => $api_key,
+            'environment' => Environment::SANDBOX,
+        ]);
+
+        $api_response = $client->getLocationsApi()->listLocations();
+
+        if ($api_response->isSuccess()) {
+            $result = $api_response->getResult();
+
+            // Loop over each location.
+            foreach ($result->getLocations() as $location) {
+                if ($location->getStatus() === "INACTIVE") {
+                    continue;
+                }
+
+                // Extract properties from the location.
+                $locationId = $location->getId();
+                $name = $location->getName();
+                $address = $location->getAddress();
+
+                $addressLine = $address->getAddressLine1();
+                $locality = $address->getLocality();
+                $administrativeDistrictLevel1 = $address->getAdministrativeDistrictLevel1();
+
+                // Insert or update the data in the database
+                $wpdb->replace(
+                    $table_name,
+                    array(
+                        'id' => $locationId,
+                        'name' => $name,
+                        'address_line' => $addressLine,
+                        'locality' => $locality,
+                        'administrative_district' => $administrativeDistrictLevel1,
+                    )
+                );
+            }
+        } else {
+            $errors = $api_response->getErrors();
+            // Handle errors here...
+        }
     }
 
     private function executeQuery($sql_query) {
