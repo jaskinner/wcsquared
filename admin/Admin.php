@@ -48,7 +48,11 @@ class Admin {
 	
 		// Call the sync_locations_handler function if the checkbox is checked.
 		if ( 'yes' === $sync_checkbox ) {
-			DatabaseHandler::syncLocations();
+			// Call the sync_locations_handler function if the checkbox is checked.
+			if ( 'yes' === $sync_checkbox ) {
+				$test = new Locations();
+				$test->syncLocations();
+			}
 		}
 	}
 
