@@ -41,7 +41,7 @@ class Products {
         $productId = $product->getId();
         $locationId = 'LKGS66YAAZ6DM';
 
-        $wpdb->insert(
+        $wpdb->replace(
             $this->table_name_imported_products,
             array(
                 'product_id' => $productId,

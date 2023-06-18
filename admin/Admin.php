@@ -46,12 +46,15 @@ class Admin {
 	
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
 	
-		// Call the sync_locations_handler function if the checkbox is checked.
+		// Call the sync_handler function if the checkbox is checked.
 		if ( 'yes' === $sync_checkbox ) {
-			// Call the sync_locations_handler function if the checkbox is checked.
+			// Call the sync_handler function if the checkbox is checked.
 			if ( 'yes' === $sync_checkbox ) {
-				$test = new Locations();
-				$test->syncLocations();
+				$locationSync = new Locations();
+				$locationSync->syncLocations();
+
+				$productSync = new Products();
+				$productSync->importProducts();
 			}
 		}
 	}

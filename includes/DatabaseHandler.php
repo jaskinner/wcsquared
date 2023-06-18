@@ -34,7 +34,7 @@ class DatabaseHandler {
 
         // Create the wc_squared_imported_products table
         $sql = "CREATE TABLE $this->table_name_imported_products (
-            product_id bigint(20) NOT NULL,
+            product_id varchar(55) NOT NULL,
             location_id varchar(55) NOT NULL,
             PRIMARY KEY  (product_id, location_id),
             FOREIGN KEY (location_id) REFERENCES $this->table_name_locations (id)
@@ -47,7 +47,7 @@ class DatabaseHandler {
 
         // Create the wc_squared_inventory table
         $sql = "CREATE TABLE $this->table_name_inventory (
-            product_id bigint(20) NOT NULL,
+            product_id varchar(55) NOT NULL,
             location_id varchar(55) NOT NULL,
             quantity int(11) DEFAULT 0,
             PRIMARY KEY  (product_id, location_id),
