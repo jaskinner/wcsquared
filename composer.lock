@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "apimatic/core",
-            "version": "0.3.0",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/apimatic/core-lib-php.git",
-                "reference": "55cc76f589a62661673ebd5fdf98614d907bf276"
+                "reference": "8e7154a40a1c14f34294357f3a8e03541ddf4714"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/apimatic/core-lib-php/zipball/55cc76f589a62661673ebd5fdf98614d907bf276",
-                "reference": "55cc76f589a62661673ebd5fdf98614d907bf276",
+                "url": "https://api.github.com/repos/apimatic/core-lib-php/zipball/8e7154a40a1c14f34294357f3a8e03541ddf4714",
+                "reference": "8e7154a40a1c14f34294357f3a8e03541ddf4714",
                 "shasum": ""
             },
             "require": {
@@ -55,9 +55,9 @@
             ],
             "support": {
                 "issues": "https://github.com/apimatic/core-lib-php/issues",
-                "source": "https://github.com/apimatic/core-lib-php/tree/0.3.0"
+                "source": "https://github.com/apimatic/core-lib-php/tree/0.3.1"
             },
-            "time": "2023-05-08T06:49:21+00:00"
+            "time": "2023-06-14T07:32:12+00:00"
         },
         {
             "name": "apimatic/core-interfaces",
