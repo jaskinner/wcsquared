@@ -28,7 +28,11 @@ class Products {
 			$result = $api_response->getResult();
 
 			foreach ($result->getObjects() as $object) {
-				$this->createWooProduct($object->getItemData());
+				if (count($object->getItemData()->getVariations()) <= 1) {
+					$this->createSimpleWooProduct($object->getItemData());
+				} else {
+					$this->createVariableWooProduct($object->getItemData());
+				}
 				// $this->insertOrUpdateProduct($object);
 			}
 		} else {
@@ -51,75 +55,57 @@ class Products {
 		);
 	}
 
-	private function createWooProduct($product) {
-		// Prepare the product data
-		$product_data = array(
-			'post_title'   => $product->getName(),
-			'post_content' => 'description',
-			'post_status'  => 'publish',
-			'post_type'    => 'product',
-		);
-	
-		// Insert the product post
-		$product_id = wp_insert_post($product_data);
-	
-		// Check the number of variations
-		$variations = $product->getVariations();
-		if (count($variations) > 1) {
-			// Set the product type as variable
-			wp_set_object_terms($product_id, 'variable', 'product_type');
-	
-			// Set product variations
-			foreach ($variations as $variation) {
-				$variationData = $variation->getItemVariationData();
-	
-				// Prepare variation data
-				$variation_data = array(
-					'post_title'   => $variationData->getName(),
-					'post_status'  => 'publish',
-					'post_parent'  => $product_id,
-					'post_type'    => 'product_variation',
-				);
-	
-				// Insert the variation post
-				$variation_id = wp_insert_post($variation_data);
-	
-				// Set variation attributes and prices
-				update_post_meta($variation_id, '_price', $variationData->getPriceMoney()->getAmount());
-				update_post_meta($variation_id, '_regular_price', $variationData->getPriceMoney()->getAmount());
-				// ...
-	
-				// Set the SKU (assuming SKU is available in the variation)
-				update_post_meta($variation_id, '_sku', $variationData->getSku());
-				
-				// Link the variation to the parent product
-				update_post_meta($variation_id, '_parent_id', $product_id);
-				update_post_meta($variation_id, '_parent', 'product');
-	
-				// Link the variation to the parent product
-				wp_set_object_terms($variation_id, 'simple', 'product_type');
-			}
-		} else {
-			// Set the product type as simple
-			wp_set_object_terms($product_id, 'simple', 'product_type');
-	
-			// Set product attributes and prices
-			$variationData = $variations[0]->getItemVariationData();
+	private function createSimpleWooProduct($itemData) {
+		$new_product = new WC_Product_Simple();
+		$variationData = $itemData->getVariations()[0]->getItemVariationData();
+		$new_product->set_sku($variationData->getSku());
+		$new_product->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
 
-			update_post_meta($product_id, '_price', $variationData->getPriceMoney()->getAmount());
-			update_post_meta($product_id, '_regular_price', $variationData->getPriceMoney()->getAmount());
-			// ...
+		// Set product data
+		$new_product->set_name($itemData->getName());
+		$new_product->set_description($itemData->getDescriptionHtml());
+		$new_product->set_short_description($itemData->getDescriptionPlaintext());
+
+		// Save the product
+		$product_id = $new_product->save();
+	}
+
+	private function createVariableWooProduct($itemData) {
 	
-			// Set the SKU (assuming SKU is available in the variation)
-			update_post_meta($product_id, '_sku', $variationData->getSku());
+		$variations = $itemData->getVariations();
+	
+		$new_product = new WC_Product_Variable();
+
+		// one available for variation attribute
+		$attribute = new WC_Product_Attribute();
+		$attribute->set_name( 'Magical' );
+		$attribute->set_options( array( 'Yes', 'No' ) );
+		$attribute->set_position( 0 );
+		$attribute->set_visible( true );
+		$attribute->set_variation( true ); // here it is
+			
+		$new_product->set_attributes( array( $attribute ) );
+	
+		// Set product data
+		$new_product->set_name($itemData->getName());
+		$new_product->set_description($itemData->getDescriptionHtml());
+		$new_product->set_short_description($itemData->getDescriptionPlaintext());
+	
+		// Save the product
+		$product_id = $new_product->save();
+	
+		// If more than one variation exists, create them as separate products
+		foreach($variations as $variation) {
+			$variationData = $variation->getItemVariationData();
+
+			$new_variation = new WC_Product_Variation();
+			$new_variation->set_name($itemData->getName() . " - " . $variationData->getName());
+			$new_variation->set_parent_id($product_id);
+			$new_variation->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
+			$new_variation->set_sku($variationData->getSku());
+
+			// Save the variation
+			$new_variation->save();
 		}
-	
-		// Update the product stock and other details
-		update_post_meta($product_id, '_stock', 10);
-		update_post_meta($product_id, '_stock_status', 'instock');
-		// ...
-	
-		// Set the product thumbnail image (if applicable)
-		// set_post_thumbnail($product_id, $image_id);
 	}
 }
