@@ -24,7 +24,7 @@ class Products
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => Environment::SANDBOX,
+				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 
 			$api_response = $client->getCatalogApi()->listCatalog(null, 'ITEM');
@@ -131,7 +131,7 @@ class Products
 				$new_variation->save();
 			}
 		} catch(\Exception $e) {
-			error_log('An error occurred creating variable product: ' . $e->getMessage());
+			error_log("An error occurred creating variable product:\n" . json_encode($itemData) . " \n " . $e->getMessage());
 		}
 	}
 }
