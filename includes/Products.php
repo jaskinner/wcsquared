@@ -1,5 +1,7 @@
 <?php
 
+set_time_limit(0); // Set no time limit
+
 /**
  * Products
  */
@@ -27,22 +29,27 @@ class Products
 				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 
-			$api_response = $client->getCatalogApi()->listCatalog(null, 'ITEM');
+			$cursor = null;
 
-			if ($api_response->isSuccess()) {
-				$result = $api_response->getResult();
+			do {
 
-				foreach ($result->getObjects() as $object) {
-					if (count($object->getItemData()->getVariations()) <= 1) {
-						$this->createSimpleWooProduct($object->getItemData());
-					} else {
-						$this->createVariableWooProduct($object->getItemData());
+				$api_response = $client->getCatalogApi()->listCatalog($cursor, 'ITEM');
+	
+				if ($api_response->isSuccess()) {
+
+					$cursor = $api_response->getCursor();
+
+					foreach ($api_response->getResult()->getObjects() as $object) {
+						if (count($object->getItemData()->getVariations()) <= 1) {
+							$this->createSimpleWooProduct($object->getItemData());
+						} else {
+							$this->createVariableWooProduct($object->getItemData());
+						}
+						// $this->insertOrUpdateProduct($object);
 					}
-					// $this->insertOrUpdateProduct($object);
 				}
-			} else {
-				$errors = $api_response->getErrors();
-			}
+
+			} while ($cursor);
 		} catch(\Exception $e) {
 			error_log('An error occurred during product import: ' . $e->getMessage());
 		}
