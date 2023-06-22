@@ -1,7 +1,5 @@
 <?php
 
-set_time_limit(0); // Set no time limit
-
 /**
  * Products
  */
