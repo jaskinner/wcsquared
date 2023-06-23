@@ -28,6 +28,7 @@ class Products
 	
 				if ($api_response->isSuccess()) {
 
+					// TODO: timeouts or something are happening here
 					// $cursor = $api_response->getCursor();
 
 					foreach ($api_response->getResult()->getObjects() as $object) {
