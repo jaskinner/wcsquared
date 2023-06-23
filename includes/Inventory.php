@@ -55,7 +55,6 @@ class Inventory {
             );
         } catch(Error $e) {
             print_r($e);
-            die();
         }
     }
 
