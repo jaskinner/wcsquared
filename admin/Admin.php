@@ -47,11 +47,10 @@ class Admin {
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
 	
 		if ( 'yes' === $sync_checkbox ) {
-			$locationSync = new Locations();
-			$locationSync->syncLocations();
+			Locations::syncLocations();
 
-			$productSync = new Products();
-			$productSync->importProducts();
+			// $productSync = new Products();
+			// $productSync->importProducts();
 		}
 	}
 
