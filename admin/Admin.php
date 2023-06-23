@@ -48,9 +48,7 @@ class Admin {
 	
 		if ( 'yes' === $sync_checkbox ) {
 			Locations::syncLocations();
-
-			// $productSync = new Products();
-			// $productSync->importProducts();
+			Products::importProducts();
 		}
 	}
 

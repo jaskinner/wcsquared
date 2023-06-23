@@ -11,10 +11,9 @@ use Square\Exceptions\ApiException;
 class Products
 {
 
-	public function __construct(){}
+	// public function __construct(){}
 
-	public function importProducts()
-	{
+	public static function importProducts() {
 		try {
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
@@ -29,13 +28,13 @@ class Products
 	
 				if ($api_response->isSuccess()) {
 
-					$cursor = $api_response->getCursor();
+					// $cursor = $api_response->getCursor();
 
 					foreach ($api_response->getResult()->getObjects() as $object) {
 						if (count($object->getItemData()->getVariations()) <= 1) {
-							$this->createSimpleWooProduct($object->getItemData());
+							self::createSimpleWooProduct($object->getItemData());
 						} else {
-							$this->createVariableWooProduct($object->getItemData());
+							self::createVariableWooProduct($object->getItemData());
 						}
 					}
 				}
@@ -46,8 +45,7 @@ class Products
 		}
 	}
 
-	private function createSimpleWooProduct($itemData)
-	{
+	private static function createSimpleWooProduct($itemData) {
 		try {
 			$new_product = new WC_Product_Simple();
 			$variationData = $itemData->getVariations()[0]->getItemVariationData();
@@ -66,8 +64,7 @@ class Products
 		}
 	}
 
-	private function createVariableWooProduct($itemData)
-	{
+	private static function createVariableWooProduct($itemData) {
 		try {
 			$variations = $itemData->getVariations();
 

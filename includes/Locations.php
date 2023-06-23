@@ -9,7 +9,7 @@ use Square\Exceptions\ApiException;
 
 class Locations {
 
-    public function __construct() {}
+    // public function __construct() {}
 
     public static function syncLocations() {
         $api_key = get_option('wc_squared_api_key');
