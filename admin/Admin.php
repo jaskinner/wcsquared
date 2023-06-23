@@ -45,7 +45,6 @@ class Admin {
 		woocommerce_update_options( $settings );
 	
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
-		$sb_checkbox = isset( $_POST['wc_squared_sb_checkbox'] ) ? 'yes' : 'no';
 	
 		if ( 'yes' === $sync_checkbox ) {
 			$locationSync = new Locations();
@@ -53,10 +52,6 @@ class Admin {
 
 			$productSync = new Products();
 			$productSync->importProducts();
-		}
-
-		if ( 'yes' === $sb_checkbox ) {
-			
 		}
 	}
 
@@ -78,13 +73,6 @@ class Admin {
 				'type' => 'password',
 				'desc' => __( 'Enter your Square API key', 'wcsquared-settings-tab' ),
 				'id'   => 'wc_squared_api_key',
-			),
-			'sb_checkbox' => array(
-				'name'    => __( 'SANDBOX', 'wc-squared-sb' ),
-				'type'    => 'checkbox',
-				'desc'    => __( 'Check this box to connect to SANDBOX.', 'wc-squared-sb' ),
-				'id'      => 'wc_squared_sb_checkbox',
-				'default' => 'no',
 			),
 			'sync_checkbox' => array(
 				'name'    => __( 'Sync Data', 'wc-squared' ),

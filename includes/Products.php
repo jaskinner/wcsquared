@@ -29,7 +29,7 @@ class Products
 	
 				if ($api_response->isSuccess()) {
 
-					// $cursor = $api_response->getCursor();
+					$cursor = $api_response->getCursor();
 
 					foreach ($api_response->getResult()->getObjects() as $object) {
 						if (count($object->getItemData()->getVariations()) <= 1) {
