@@ -20,30 +20,32 @@ class Products
 				'accessToken' => $api_key,
 				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
+		} catch(\Exception $e) {
+			error_log('An error occurred creating square client instance: ' . $e->getMessage());
+		}
 
-			$cursor = null;
+		$cursor = null;
 
-			do {
-				$api_response = $client->getCatalogApi()->listCatalog($cursor, 'ITEM');
-	
-				if ($api_response->isSuccess()) {
+		do {
+			$api_response = $client->getCatalogApi()->listCatalog($cursor, 'ITEM');
 
-					// TODO: timeouts or something are happening here
-					// $cursor = $api_response->getCursor();
+			if ($api_response->isSuccess()) {
 
-					foreach ($api_response->getResult()->getObjects() as $object) {
-						if (count($object->getItemData()->getVariations()) <= 1) {
-							self::createSimpleWooProduct($object->getItemData());
-						} else {
-							self::createVariableWooProduct($object->getItemData());
-						}
+				// TODO: timeouts or something are happening here
+				// $cursor = $api_response->getCursor();
+
+				foreach ($api_response->getResult()->getObjects() as $object) {
+					if (count($object->getItemData()->getVariations()) <= 1) {
+						self::createSimpleWooProduct($object->getItemData());
+					} else {
+						self::createVariableWooProduct($object->getItemData());
 					}
 				}
+			} else {
+				error_log('An error occurred creating square client instance: ' . $api_response->getErrors());
+			}
 
-			} while ($cursor);
-		} catch(\Exception $e) {
-			error_log('An error occurred during product import: ' . $e->getMessage());
-		}
+		} while ($cursor);
 	}
 
 	private static function createSimpleWooProduct($itemData) {
@@ -51,13 +53,18 @@ class Products
 			$new_product = new WC_Product_Simple();
 			$variationData = $itemData->getVariations()[0]->getItemVariationData();
 			$new_product->set_sku($variationData->getSku());
-			$new_product->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
 
+			if ($variationData->getSku() === null) {
+				throw new \Exception('SKU is null. Import process halted.');
+			}
+			
+			$new_product->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
+			
 			// Set product data
 			$new_product->set_name($itemData->getName());
 			$new_product->set_description($itemData->getDescriptionHtml());
 			$new_product->set_short_description($itemData->getDescriptionPlaintext());
-
+			
 			// Save the product
 			$product_id = $new_product->save();
 		} catch(\Exception $e) {
@@ -95,23 +102,35 @@ class Products
 
 			// Save the product
 			$product_id = $new_product->save();
+		} catch(\Exception $e) {
+			error_log("An error occurred creating variable product: " . $e->getMessage());
+		}
 
-			// If more than one variation exists, create them as separate products
-			foreach ($variations as $variation) {
+		// If more than one variation exists, create them as separate products
+		foreach ($variations as $variation) {
+			try {
 				$variationData = $variation->getItemVariationData();
 
 				$new_variation = new WC_Product_Variation();
+				$new_variation->set_sku($variationData->getSku());
+
+				if ($variationData->getSku() === null) {
+					throw new \Exception('SKU is null. Import process halted.');
+				}
+
 				$new_variation->set_name($itemData->getName() . " - " . $variationData->getName());
 				$new_variation->set_parent_id($product_id);
 				$new_variation->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
-				$new_variation->set_sku($variationData->getSku());
 				$new_variation->set_attributes( array( 'option' => $variationData->getName() ) );
 
 				// Save the variation
 				$new_variation->save();
+			} catch(\Exception $e) {
+				error_log("An error occurred creating product variation:\n " . $e->getMessage());
+
+				// Rollback the creation of the variable product
+				wp_delete_post($product_id, true);
 			}
-		} catch(\Exception $e) {
-			error_log("An error occurred creating variable product:\n" . json_encode($itemData) . " \n " . $e->getMessage());
 		}
 	}
 }
