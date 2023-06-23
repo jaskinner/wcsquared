@@ -10,13 +10,8 @@ use Square\Exceptions\ApiException;
 
 class Products
 {
-	private $table_name_imported_products;
 
-	public function __construct()
-	{
-		global $wpdb;
-		$this->table_name_imported_products = $wpdb->prefix . 'wc_squared_imported_products';
-	}
+	public function __construct(){}
 
 	public function importProducts()
 	{
@@ -30,12 +25,11 @@ class Products
 			$cursor = null;
 
 			do {
-
 				$api_response = $client->getCatalogApi()->listCatalog($cursor, 'ITEM');
 	
 				if ($api_response->isSuccess()) {
 
-					$cursor = $api_response->getCursor();
+					// $cursor = $api_response->getCursor();
 
 					foreach ($api_response->getResult()->getObjects() as $object) {
 						if (count($object->getItemData()->getVariations()) <= 1) {
