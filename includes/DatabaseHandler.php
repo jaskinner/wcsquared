@@ -11,7 +11,6 @@ class DatabaseHandler {
     public function __construct() {
         global $wpdb;
         $this->table_name_locations = $wpdb->prefix . 'wc_squared_locations';
-        $this->table_name_imported_products = $wpdb->prefix . 'wc_squared_imported_products';
         $this->table_name_inventory = $wpdb->prefix . 'wc_squared_inventory';
     }
 
@@ -31,6 +30,7 @@ class DatabaseHandler {
     }
 
     public function createInventoryTable() {
+        global $wpdb;
 
         // Create the wc_squared_inventory table
         $sql = "CREATE TABLE $this->table_name_inventory (
@@ -38,7 +38,7 @@ class DatabaseHandler {
             location_id varchar(55) NOT NULL,
             quantity int(11) DEFAULT 0,
             PRIMARY KEY  (post_id, location_id),
-            FOREIGN KEY (post_id) REFERENCES $this->table_name_imported_products (post_id),
+            FOREIGN KEY (post_id) REFERENCES {$wpdb->posts} (ID),
             FOREIGN KEY (location_id) REFERENCES $this->table_name_locations (id)
         )";
         
