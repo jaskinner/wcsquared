@@ -43,7 +43,6 @@ class Products
 						} else {
 							$this->createVariableWooProduct($object->getItemData());
 						}
-						// $this->insertOrUpdateProduct($object);
 					}
 				}
 
@@ -51,22 +50,6 @@ class Products
 		} catch(\Exception $e) {
 			error_log('An error occurred during product import: ' . $e->getMessage());
 		}
-	}
-
-	private function insertOrUpdateProduct($product)
-	{
-		global $wpdb;
-
-		$productId = $product->getId();
-		$locationId = 'LKGS66YAAZ6DM';
-
-		$wpdb->replace(
-			$this->table_name_imported_products,
-			array(
-				'post_id' => $productId,
-				'location_id' => $locationId,
-			)
-		);
 	}
 
 	private function createSimpleWooProduct($itemData)

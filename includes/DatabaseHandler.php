@@ -30,21 +30,6 @@ class DatabaseHandler {
         $this->executeQuery($sql);
     }
 
-    public function createImportedProductsTable() {
-        global $wpdb;
-
-        // Create the wc_squared_imported_products table
-        $sql = "CREATE TABLE $this->table_name_imported_products (
-            post_id bigint(20) unsigned NOT NULL,
-            location_id varchar(55) NOT NULL,
-            PRIMARY KEY  (post_id, location_id),
-            FOREIGN KEY (post_id) REFERENCES {$wpdb->posts} (ID),
-            FOREIGN KEY (location_id) REFERENCES $this->table_name_locations (id)
-        )";
-                
-        $this->executeQuery($sql);
-    }
-
     public function createInventoryTable() {
 
         // Create the wc_squared_inventory table

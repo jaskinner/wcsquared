@@ -27,7 +27,6 @@ class WC_Squared {
     public static function activate() {
         $db_handler = new DatabaseHandler();
         $db_handler->createLocationsTable();
-        $db_handler->createImportedProductsTable();
         $db_handler->createInventoryTable();
 
         // Create the API key option if it doesn't exist
