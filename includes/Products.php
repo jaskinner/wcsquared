@@ -24,6 +24,8 @@ class Products
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());
 		}
 
+		self::syncCategories($client);
+
 		$cursor = null;
 
 		do {
@@ -48,6 +50,30 @@ class Products
 		} while ($cursor);
 	}
 
+	private static function syncCategories($client) {
+		$api_response = $client->getCatalogApi()->listCatalog(null, 'CATEGORY');
+
+		if ($api_response->isSuccess()) {
+			foreach ($api_response->getResult()->getObjects() as $object) {
+				$category = wp_insert_term( $object->getCategoryData()->getName(), 'product_cat' );		
+				
+				if (!is_wp_error($category)) {
+					$category_id = $category['term_id'];
+
+					// Save the Square category ID as term meta
+					$old_square_category_id = $object->getId(); // Replace with the actual Square category ID
+					update_term_meta($category_id, 'square_category_id', $old_square_category_id);
+				} else {
+					// Handle error if category creation fails
+					$error_message = $category->get_error_message();
+					error_log('Failed to create product category: ' . $error_message);
+				}
+			}
+		} else {
+			error_log('An error occurred during category sync: ' . $api_response->getErrors());
+		}
+	}
+
 	private static function createSimpleWooProduct($itemData) {
 		try {
 			$new_product = new WC_Product_Simple();
@@ -55,7 +81,7 @@ class Products
 			$new_product->set_sku($variationData->getSku());
 
 			if ($variationData->getSku() === null) {
-				throw new \Exception('SKU is null. Import process halted.');
+				throw new \Exception('SKU is null.');
 			}
 			
 			$new_product->set_regular_price($variationData->getPriceMoney()->getAmount() / 100); // Assuming the price is in cents
@@ -115,7 +141,7 @@ class Products
 				$new_variation->set_sku($variationData->getSku());
 
 				if ($variationData->getSku() === null) {
-					throw new \Exception('SKU is null. Import process halted.');
+					throw new \Exception('SKU is null.');
 				}
 
 				$new_variation->set_name($itemData->getName() . " - " . $variationData->getName());
