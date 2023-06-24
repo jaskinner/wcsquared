@@ -90,6 +90,22 @@ class Products
 			$new_product->set_name($itemData->getName());
 			$new_product->set_description($itemData->getDescriptionHtml());
 			$new_product->set_short_description($itemData->getDescriptionPlaintext());
+
+			// Get the term ID based on the Square category ID meta value
+			$terms = get_terms(array(
+				'taxonomy' => 'product_cat',
+				'fields' => 'ids',
+				'hide_empty' => false,
+				'meta_query' => array(
+					array(
+						'key' => 'square_category_id',
+						'value' => $itemData->getCategoryId(),
+						'compare' => '='
+					)
+				)
+			));
+			
+			$new_product->set_category_ids($terms);
 			
 			// Save the product
 			$product_id = $new_product->save();
