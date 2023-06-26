@@ -274,10 +274,26 @@ class Products
 				// Generate the metadata for the attachment, and update the database record.
 				$attach_data = wp_generate_attachment_metadata($attach_id, $image_path);
 				wp_update_attachment_metadata($attach_id, $attach_data);
+
+				// Finally, add the attachment to the product gallery
+				$product = wc_get_product($post_id);
 	
 				if ($feat) {
 					// Finally, set the attachment as the post thumbnail
 					set_post_thumbnail($post_id, $attach_id);
+				} else {
+					if ($product) {
+						
+						// Get existing gallery
+						$existing_gallery = $product->get_gallery_image_ids();
+						
+						// Add new image to gallery
+						$existing_gallery[] = $attach_id;
+						
+						// Update gallery
+						$product->set_gallery_image_ids($existing_gallery);
+						$product->save();
+					}
 				}
 			} else {
 				error_log('Error saving image: ' . $image_name);
