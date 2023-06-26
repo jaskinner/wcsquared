@@ -18,7 +18,7 @@ class Products
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
+				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());
@@ -39,8 +39,8 @@ class Products
 				foreach ($api_response->getResult()->getObjects() as $object) {
 					if (count($object->getItemData()->getVariations()) <= 1) {
 						self::createSimpleWooProduct($object->getItemData());
-					} else {
-						self::createVariableWooProduct($object->getItemData());
+					// } else {
+					// 	self::createVariableWooProduct($object->getItemData());
 					}
 				}
 			} else {
@@ -70,7 +70,7 @@ class Products
 				}
 			}
 		} else {
-			error_log('An error occurred during category sync: ' . $api_response->getErrors());
+			error_log('An error occurred during category sync: ' . print_r($api_response->getErrors()));
 		}
 	}
 
@@ -109,6 +109,9 @@ class Products
 			
 			// Save the product
 			$product_id = $new_product->save();
+
+			// image import
+			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating simple product: ' . $e->getMessage());
 		}
@@ -142,8 +145,27 @@ class Products
 			$new_product->set_description($itemData->getDescriptionHtml());
 			$new_product->set_short_description($itemData->getDescriptionPlaintext());
 
+			// Get the term ID based on the Square category ID meta value
+			$terms = get_terms(array(
+				'taxonomy' => 'product_cat',
+				'fields' => 'ids',
+				'hide_empty' => false,
+				'meta_query' => array(
+					array(
+						'key' => 'square_category_id',
+						'value' => $itemData->getCategoryId(),
+						'compare' => '='
+					)
+				)
+			));
+			
+			$new_product->set_category_ids($terms);
+
 			// Save the product
 			$product_id = $new_product->save();
+
+			// image import
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log("An error occurred creating variable product: " . $e->getMessage());
 		}
@@ -173,6 +195,95 @@ class Products
 				// Rollback the creation of the variable product
 				wp_delete_post($product_id, true);
 			}
+		}
+	}
+
+	public static function getCatalogObjectImageURL($catalog_object_id, $post_id) {
+		try {
+			$api_key = get_option('wc_squared_api_key');
+			$client = new SquareClient([
+				'accessToken' => $api_key,
+				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+			]);
+		} catch(\Exception $e) {
+			error_log('An error occurred creating square client instance: ' . $e->getMessage());
+		}
+
+		try {
+			$api_response = $client->getCatalogApi()->retrieveCatalogObject($catalog_object_id);
+	
+			if ($api_response->isSuccess()) {
+				$catalog_object = $api_response->getResult()->getObject();
+				$image_ids = $catalog_object->getItemData()->getImageIds();
+
+				foreach ($image_ids as $image_id) {
+					if ($image_id) {
+						$api_response = $client->getCatalogApi()->retrieveCatalogObject($image_id);
+						
+						if ($api_response->isSuccess()) {
+							$image_data = $api_response->getResult()->getObject()->getImageData();
+							self::downloadImage($image_data->getUrl(), $post_id, $image_ids[0] == $image_id);
+						}
+					}
+				}
+			} else {
+				$errors = $api_response->getErrors();
+				// Handle API errors
+				// ...
+			}
+		} catch (\Exception $e) {
+			// Handle exceptions
+			// ...
+		}
+	
+		return ''; // Return empty string if image URL is not found or there was an error
+	}
+
+	public static function downloadImage($url, $post_id, $feat) {
+		$upload_dir = wp_upload_dir(); // Get the upload directory path
+		$image_name = rand(100000, 999999) . basename($url); // Extract the image name from the URL
+		$image_path = $upload_dir['path'] . '/' . $image_name; // Set the path to save the image
+	
+		// Download the image
+		$response = wp_remote_get($url);
+	
+		if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+			$image_data = wp_remote_retrieve_body($response);
+			$saved = file_put_contents($image_path, $image_data); // Save the image locally
+	
+			if ($saved !== false) {
+				// Image saved successfully, now you can process it further if needed
+				// For example, you can set the image as a featured image for a post
+				$filetype = wp_check_filetype(basename($image_path), null);
+
+				// Prepare an array of post data for the attachment.
+				$attachment = array(
+					'guid'           => $upload_dir['url'] . '/' . basename($image_path),
+					'post_mime_type' => $filetype['type'],
+					'post_title'     => preg_replace('/\.[^.]+$/', '', basename($image_path)),
+					'post_content'   => '',
+					'post_status'    => 'inherit'
+				);
+	
+				// Insert the attachment.
+				$attach_id = wp_insert_attachment($attachment, $image_path, $post_id);
+	
+				// Include the image handling library
+				require_once(ABSPATH . 'wp-admin/includes/image.php');
+	
+				// Generate the metadata for the attachment, and update the database record.
+				$attach_data = wp_generate_attachment_metadata($attach_id, $image_path);
+				wp_update_attachment_metadata($attach_id, $attach_data);
+	
+				if ($feat) {
+					// Finally, set the attachment as the post thumbnail
+					set_post_thumbnail($post_id, $attach_id);
+				}
+			} else {
+				error_log('Error saving image: ' . $image_name);
+			}
+		} else {
+			error_log('Error downloading image: ' . $url);
 		}
 	}
 }
