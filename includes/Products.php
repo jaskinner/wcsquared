@@ -10,8 +10,7 @@ use Square\SquareClient;
 use Square\Environment;
 use Square\Exceptions\ApiException;
 
-class Products
-{
+class Products {
 
 	// public function __construct(){}
 
@@ -41,8 +40,8 @@ class Products
 				foreach ($api_response->getResult()->getObjects() as $object) {
 					if (count($object->getItemData()->getVariations()) <= 1) {
 						self::createSimpleWooProduct($object->getItemData());
-					} else {
-						self::createVariableWooProduct($object->getItemData());
+					// } else {
+					// 	self::createVariableWooProduct($object->getItemData());
 					}
 				}
 			} else {
@@ -113,9 +112,18 @@ class Products
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+
+			// inventory sync
+			$counts = Inventory::getInventoryCountsByProductId($itemData->getVariations()[0]->getId());
+
+			foreach ($counts->getCounts() as $count) {
+				error_log(json_encode($count));
+				Inventory::insertOrUpdateCount($count, $product_id);
+			}
 		} catch(\Exception $e) {
 			error_log('An error occurred creating simple product: ' . $e->getMessage());
+			throw $e;
 		}
 	}
 
@@ -167,7 +175,7 @@ class Products
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log("An error occurred creating variable product: " . $e->getMessage());
 		}

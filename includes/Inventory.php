@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Inventory
  */
@@ -10,12 +11,9 @@ use Square\Exceptions\ApiException;
 class Inventory {
     private $table_name;
 
-    public function __construct() {
-        global $wpdb;
-        $this->table_name = $wpdb->prefix . 'wc_squared_inventory';
-    }
+    // public function __construct() {}
 
-    public function importInventoryCount() {
+    public static function importInventoryCount() {
         $api_key = get_option('wc_squared_api_key');
         $client = new SquareClient([
             'accessToken' => $api_key,
@@ -30,7 +28,7 @@ class Inventory {
             $result = $api_response->getResult();
 
             foreach ($result->getCounts() as $count) {
-                $this->insertOrUpdateCount($count);
+                // self::insertOrUpdateCount($count);
             }
 
         } else {
@@ -38,15 +36,32 @@ class Inventory {
         }
     }
 
-    private function insertOrUpdateCount($count) {
-        global $wpdb;
+    public static function getInventoryCountsByProductId($product_id) {
+        $api_key = get_option('wc_squared_api_key');
+        $client = new SquareClient([
+            'accessToken' => $api_key,
+            'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+        ]);
+        
+        $api_response = $client->getInventoryApi()->retrieveInventoryCount($product_id);
 
-        $postId = $this->getPostIdByMeta('square_catalog_object_id', $count->getCatalogObjectId());
+        if ($api_response->isSuccess()) {
+            $result = $api_response->getResult();
+            return $result;
+        } else {
+            $errors = $api_response->getErrors();
+        }
+    }
+
+    public static function insertOrUpdateCount($count, $postId) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'wc_squared_inventory';
+
         $locationId = $count->getLocationId();
 
         try {
             $wpdb->replace(
-                $this->table_name,
+                $table_name,
                 array(
                     'post_id' => $postId,
                     'location_id' => $locationId,
@@ -55,6 +70,7 @@ class Inventory {
             );
         } catch(Error $e) {
             print_r($e);
+            throw $e;
         }
     }
 
