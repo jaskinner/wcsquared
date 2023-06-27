@@ -19,7 +19,7 @@ class Inventory {
         $api_key = get_option('wc_squared_api_key');
         $client = new SquareClient([
             'accessToken' => $api_key,
-            'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
+            'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
         ]);
 
         $body = new \Square\Models\BatchRetrieveInventoryCountsRequest();
