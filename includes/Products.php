@@ -4,6 +4,8 @@
  * Products
  */
 
+ set_time_limit(0);
+
 use Square\SquareClient;
 use Square\Environment;
 use Square\Exceptions\ApiException;
@@ -39,8 +41,8 @@ class Products
 				foreach ($api_response->getResult()->getObjects() as $object) {
 					if (count($object->getItemData()->getVariations()) <= 1) {
 						self::createSimpleWooProduct($object->getItemData());
-					// } else {
-					// 	self::createVariableWooProduct($object->getItemData());
+					} else {
+						self::createVariableWooProduct($object->getItemData());
 					}
 				}
 			} else {
@@ -165,7 +167,7 @@ class Products
 			$product_id = $new_product->save();
 
 			// image import
-			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log("An error occurred creating variable product: " . $e->getMessage());
 		}
@@ -273,7 +275,7 @@ class Products
 	
 				// Generate the metadata for the attachment, and update the database record.
 				$attach_data = wp_generate_attachment_metadata($attach_id, $image_path);
-				wp_update_attachment_metadata($attach_id, $attach_data);
+				$updated = wp_update_attachment_metadata($attach_id, $attach_data);
 
 				// Finally, add the attachment to the product gallery
 				$product = wc_get_product($post_id);
