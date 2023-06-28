@@ -28,7 +28,7 @@ class Base {
 		$sku = $_POST['sku'];
 
 		try {
-			if ($_POST['sku']) {
+			if ($sku) {
 				$sku = $_POST['sku'];
 				global $wpdb;
 				$product_id = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE meta_key='_sku' AND meta_value='%s' LIMIT 1", $sku ) );			

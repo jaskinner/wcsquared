@@ -17,9 +17,22 @@ jQuery(document).ready(function ($) {
 	});
 
 	$('#pickup').click(function () {
+		if($('#option').val() == '') {
+			$('#pickup-location').prop('disabled', true);
+		} else {
+			$('#pickup-location').prop('disabled', false);
+		}
 		$('#pickup-location').show();
 	});
 
+	$('#option').change(function () {
+		if($('#option').val() == '') {
+			$('#pickup-location').prop('disabled', true);
+		} else {
+			$('#pickup-location').prop('disabled', false);
+		}
+	})
+	
 	$( '.variations_form' ).on( 'found_variation', function( event, variation ) {
 		resetDropdown(variation.sku);
 	});

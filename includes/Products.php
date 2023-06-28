@@ -19,7 +19,7 @@ class Products {
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());
@@ -35,7 +35,7 @@ class Products {
 			if ($api_response->isSuccess()) {
 
 				// TODO: timeouts or something are happening here
-				$cursor = $api_response->getCursor();
+				// $cursor = $api_response->getCursor();
 
 				foreach ($api_response->getResult()->getObjects() as $object) {
 					if (count($object->getItemData()->getVariations()) <= 1) {
@@ -112,7 +112,7 @@ class Products {
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 
 			// inventory sync
 			$counts = Inventory::getInventoryCountsByProductId($itemData->getVariations()[0]->getId());
@@ -121,8 +121,7 @@ class Products {
 				Inventory::insertOrUpdateCount($count, $product_id);
 			}
 		} catch(\Exception $e) {
-			error_log('An error occurred creating simple product: ' . $e->getMessage());
-			throw $e;
+			error_log("An error occurred creating simple product:\n " . $e->getMessage());
 		}
 	}
 
@@ -174,7 +173,7 @@ class Products {
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log("An error occurred creating variable product: " . $e->getMessage());
 		}
@@ -219,7 +218,7 @@ class Products {
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());
