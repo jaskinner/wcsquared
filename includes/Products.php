@@ -15,16 +15,15 @@ class Products {
 	// public function __construct(){}
 
 	public static function importProducts() {
-		try {
-			$api_key = get_option('wc_squared_api_key');
-			$client = new SquareClient([
-				'accessToken' => $api_key,
-				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
-			]);
-		} catch(\Exception $e) {
-			error_log('An error occurred creating square client instance: ' . $e->getMessage());
-		}
+		$api_key = get_option('wc_squared_api_key');
+		$environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
 
+		// Use the environment variable to set the SquareClient configuration
+		$client = new SquareClient([
+			'accessToken' => $api_key,
+			'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
+		]);
+		
 		self::syncCategories($client);
 
 		$cursor = null;
@@ -214,16 +213,15 @@ class Products {
 	}
 
 	public static function getCatalogObjectImageURL($catalog_object_id, $post_id) {
-		try {
-			$api_key = get_option('wc_squared_api_key');
-			$client = new SquareClient([
-				'accessToken' => $api_key,
-				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
-			]);
-		} catch(\Exception $e) {
-			error_log('An error occurred creating square client instance: ' . $e->getMessage());
-		}
+		$api_key = get_option('wc_squared_api_key');
+		$environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
 
+		// Use the environment variable to set the SquareClient configuration
+		$client = new SquareClient([
+			'accessToken' => $api_key,
+			'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
+		]);
+		
 		try {
 			$api_response = $client->getCatalogApi()->retrieveCatalogObject($catalog_object_id);
 	
