@@ -15,7 +15,7 @@ class Locations {
         $api_key = get_option('wc_squared_api_key');
         $client = new SquareClient([
             'accessToken' => $api_key,
-            'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+            'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
         ]);
 
         $api_response = $client->getLocationsApi()->listLocations();

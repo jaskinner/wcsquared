@@ -10,8 +10,7 @@ use Square\SquareClient;
 use Square\Environment;
 use Square\Exceptions\ApiException;
 
-class Products
-{
+class Products {
 
 	// public function __construct(){}
 
@@ -20,7 +19,7 @@ class Products
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());
@@ -113,9 +112,16 @@ class Products
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+
+			// inventory sync
+			$counts = Inventory::getInventoryCountsByProductId($itemData->getVariations()[0]->getId());
+
+			foreach ($counts->getCounts() as $count) {
+				Inventory::insertOrUpdateCount($count, $product_id);
+			}
 		} catch(\Exception $e) {
-			error_log('An error occurred creating simple product: ' . $e->getMessage());
+			error_log("An error occurred creating simple product:\n " . $e->getMessage());
 		}
 	}
 
@@ -167,7 +173,7 @@ class Products
 			$product_id = $new_product->save();
 
 			// image import
-			self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
+			// self::getCatalogObjectImageURL($variationData->getItemId(), $product_id);
 		} catch(\Exception $e) {
 			error_log("An error occurred creating variable product: " . $e->getMessage());
 		}
@@ -190,7 +196,14 @@ class Products
 				$new_variation->set_attributes( array( 'option' => $variationData->getName() ) );
 
 				// Save the variation
-				$new_variation->save();
+				$variation_id = $new_variation->save();
+
+				// inventory sync
+				$counts = Inventory::getInventoryCountsByProductId($variation->getId());
+
+				foreach ($counts->getCounts() as $count) {
+					Inventory::insertOrUpdateCount($count, $variation_id);
+				}
 			} catch(\Exception $e) {
 				error_log("An error occurred creating product variation:\n " . $e->getMessage());
 
@@ -205,7 +218,7 @@ class Products
 			$api_key = get_option('wc_squared_api_key');
 			$client = new SquareClient([
 				'accessToken' => $api_key,
-				'environment' => false ? Environment::SANDBOX : Environment::PRODUCTION,
+				'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
 			]);
 		} catch(\Exception $e) {
 			error_log('An error occurred creating square client instance: ' . $e->getMessage());

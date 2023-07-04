@@ -8,6 +8,8 @@
  * Author URI: https://skinnerconsulting.tech
  **/
 
+error_reporting(E_ALL & ~E_WARNING & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
+
 require 'vendor/autoload.php';
 require 'autoload.php';
 
