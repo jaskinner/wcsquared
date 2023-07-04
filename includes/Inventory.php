@@ -15,11 +15,14 @@ class Inventory {
 
     public static function importInventoryCount() {
         $api_key = get_option('wc_squared_api_key');
+        $environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
+
+        // Use the environment variable to set the SquareClient configuration
         $client = new SquareClient([
             'accessToken' => $api_key,
-            'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
+            'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
         ]);
-
+        
         $body = new \Square\Models\BatchRetrieveInventoryCountsRequest();
 
         $api_response = $client->getInventoryApi()->batchRetrieveInventoryCounts($body);
@@ -38,11 +41,14 @@ class Inventory {
 
     public static function getInventoryCountsByProductId($product_id) {
         $api_key = get_option('wc_squared_api_key');
+        $environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
+
+        // Use the environment variable to set the SquareClient configuration
         $client = new SquareClient([
             'accessToken' => $api_key,
-            'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
+            'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
         ]);
-        
+                
         $api_response = $client->getInventoryApi()->retrieveInventoryCount($product_id);
 
         if ($api_response->isSuccess()) {

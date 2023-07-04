@@ -45,6 +45,9 @@ class Admin {
 		woocommerce_update_options( $settings );
 	
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
+		$environment = isset( $_POST['wc_squared_environment'] ) ? sanitize_text_field( $_POST['wc_squared_environment'] ) : 'sandbox';
+
+		update_option( 'wc_squared_environment', $environment );
 	
 		if ( 'yes' === $sync_checkbox ) {
 			Locations::syncLocations();
@@ -71,13 +74,24 @@ class Admin {
 				'desc' => __( 'Enter your Square API key', 'wcsquared-settings-tab' ),
 				'id'   => 'wc_squared_api_key',
 			),
+			'environment' => array(
+				'name'    => __( 'Environment', 'wcsquared-settings-tab' ),
+				'type'    => 'select',
+				'desc'    => __( 'Select the Square API environment.', 'wcsquared-settings-tab' ),
+				'id'      => 'wc_squared_environment',
+				'options' => array(
+					'sandbox'    => __( 'Sandbox', 'wcsquared-settings-tab' ),
+					'production' => __( 'Production', 'wcsquared-settings-tab' ),
+				),
+				'default' => 'sandbox',
+			),
 			'sync_checkbox' => array(
 				'name'    => __( 'Sync Data', 'wc-squared' ),
 				'type'    => 'checkbox',
 				'desc'    => __( 'Check this box to sync data from Square.', 'wc-squared' ),
 				'id'      => 'wc_squared_sync_checkbox',
 				'default' => 'no',
-			),
+			),	
 			'section_end' => array(
 				'type' => 'sectionend',
 				'id'   => 'wc_squared_section_end'
