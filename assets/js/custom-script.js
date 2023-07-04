@@ -17,34 +17,40 @@ jQuery(document).ready(function ($) {
 	});
 
 	$('#pickup').click(function () {
+		if($('#option').val() == '') {
+			$('#pickup-location').prop('disabled', true);
+		} else {
+			$('#pickup-location').prop('disabled', false);
+		}
 		$('#pickup-location').show();
-		getLocations();
+	});
+
+	$('#option').change(function () {
+		if($('#option').val() == '') {
+			$('#pickup-location').prop('disabled', true);
+		} else {
+			$('#pickup-location').prop('disabled', false);
+		}
+	})
+	
+	$( '.variations_form' ).on( 'found_variation', function( event, variation ) {
+		resetDropdown(variation.sku);
 	});
 	
-	function getLocations() {
+	function resetDropdown(sku) {
 		jQuery.ajax({
 			url: my_ajax_object.ajax_url,
 			type: 'POST',
 			data: {
-				action: 'get_pickup_locations'
+				action: 'get_pickup_locations',
+				sku: sku
 			},
-			success: function (response) {
-				console.log(response);
-				updateLocationDropdown(response);
+			success: function( options_html ) {
+				jQuery('#pickup-location').html(options_html);
 			},
 			error: function (xhr, status, error) {
 				console.log('Error:', error);
 			}
 		});
 	}
-	
-	function updateLocationDropdown(locations) {
-		var dropdown = $('#pickup-location');
-		dropdown.empty();
-		dropdown.append('<option value="">Select a pickup location...</option>');
-		$.each(locations, function (index, location) {
-			dropdown.append('<option value="' + location.id + '">' + location.name + '</option>');
-		});
-	}
-	
 });

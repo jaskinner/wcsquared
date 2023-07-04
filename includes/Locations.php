@@ -8,18 +8,14 @@ use Square\Environment;
 use Square\Exceptions\ApiException;
 
 class Locations {
-    private $table_name;
 
-    public function __construct() {
-        global $wpdb;
-        $this->table_name = $wpdb->prefix . 'wc_squared_locations';
-    }
+    // public function __construct() {}
 
-    public function syncLocations() {
+    public static function syncLocations() {
         $api_key = get_option('wc_squared_api_key');
         $client = new SquareClient([
             'accessToken' => $api_key,
-            'environment' => Environment::SANDBOX,
+            'environment' => true ? Environment::SANDBOX : Environment::PRODUCTION,
         ]);
 
         $api_response = $client->getLocationsApi()->listLocations();
@@ -32,7 +28,7 @@ class Locations {
                     continue;
                 }
 
-                $this->insertOrUpdateLocation($location);
+                self::insertOrUpdateLocation($location);
             }
         } else {
             $errors = $api_response->getErrors();
@@ -40,7 +36,7 @@ class Locations {
         }
     }
 
-    private function insertOrUpdateLocation($location) {
+    private static function insertOrUpdateLocation($location) {
         global $wpdb;
 
         $locationId = $location->getId();
@@ -52,7 +48,7 @@ class Locations {
         $administrativeDistrictLevel1 = $address->getAdministrativeDistrictLevel1();
 
         $wpdb->replace(
-            $this->table_name,
+            $wpdb->prefix . 'wc_squared_locations',
             array(
                 'id' => $locationId,
                 'name' => $name,

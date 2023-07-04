@@ -46,13 +46,9 @@ class Admin {
 	
 		$sync_checkbox = isset( $_POST['wc_squared_sync_checkbox'] ) ? 'yes' : 'no';
 	
-		// Call the sync_locations_handler function if the checkbox is checked.
 		if ( 'yes' === $sync_checkbox ) {
-			// Call the sync_locations_handler function if the checkbox is checked.
-			if ( 'yes' === $sync_checkbox ) {
-				$test = new Locations();
-				$test->syncLocations();
-			}
+			Locations::syncLocations();
+			Products::importProducts();
 		}
 	}
 
@@ -76,9 +72,9 @@ class Admin {
 				'id'   => 'wc_squared_api_key',
 			),
 			'sync_checkbox' => array(
-				'name'    => __( 'Sync Locations', 'wc-squared' ),
+				'name'    => __( 'Sync Data', 'wc-squared' ),
 				'type'    => 'checkbox',
-				'desc'    => __( 'Check this box to sync locations.', 'wc-squared' ),
+				'desc'    => __( 'Check this box to sync data from Square.', 'wc-squared' ),
 				'id'      => 'wc_squared_sync_checkbox',
 				'default' => 'no',
 			),

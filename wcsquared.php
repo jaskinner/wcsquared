@@ -8,6 +8,8 @@
  * Author URI: https://skinnerconsulting.tech
  **/
 
+error_reporting(E_ALL & ~E_WARNING & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
+
 require 'vendor/autoload.php';
 require 'autoload.php';
 
@@ -27,7 +29,6 @@ class WC_Squared {
     public static function activate() {
         $db_handler = new DatabaseHandler();
         $db_handler->createLocationsTable();
-        $db_handler->createImportedProductsTable();
         $db_handler->createInventoryTable();
 
         // Create the API key option if it doesn't exist
