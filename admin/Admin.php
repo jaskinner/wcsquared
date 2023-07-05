@@ -2,6 +2,10 @@
 /**
  * Admin
  */
+
+namespace WCSquared;
+
+defined( 'ABSPATH' ) || exit;
  
 class Admin {
 
@@ -50,8 +54,8 @@ class Admin {
 		update_option( 'wc_squared_environment', $environment );
 	
 		if ( 'yes' === $sync_checkbox ) {
-			Locations::syncLocations();
-			Products::importProducts();
+			// Locations::syncLocations();
+			// Products::importProducts();
 		}
 	}
 
