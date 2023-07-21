@@ -11,9 +11,9 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The plugin loader class.
+ * The plugin class.
  */
-class WCSquared_Loader {
+class WCSquared {
 	/** the plugin name, for displaying notices */
 	const PLUGIN_NAME = 'WC Squared';
 	
@@ -33,17 +33,12 @@ class WCSquared_Loader {
 
 		// register plugin namespace with autoloader
 		$loader->addPsr4( 'WCSquared\\', __DIR__ . '/includes' );
-
-		require_once plugin_dir_path( __FILE__ ) . 'includes/Functions.php';
-
-		// fire it up!
-		wc_squared();
 	}
 
 	/**
-	 * Gets the main plugin loader instance.
+	 * Gets the main plugin instance.
 	 *
-	 * @return \WCSquared_Loader
+	 * @return \WCSquared
 	 */
 	public static function instance() {
 		if (null===self::$instance) {
@@ -54,4 +49,12 @@ class WCSquared_Loader {
 	}
 }
 
-WCSquared_Loader::instance();
+/**
+ * Returns Instance of WC Squared.
+ *
+ * @return \WCSquared
+ */
+function wc_squared() {
+
+	return \WCSquared::instance();
+}
