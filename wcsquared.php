@@ -32,26 +32,13 @@ class WCSquared_Loader {
 		$loader = require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 		// register plugin namespace with autoloader
-		$loader->addPsr4( 'WCSquared', __DIR__ . '/includes' );
+		$loader->addPsr4( 'WCSquared\\', __DIR__ . '/includes' );
 
 		require_once plugin_dir_path( __FILE__ ) . 'includes/Functions.php';
 
 		// fire it up!
 		wc_squared();
 	}
-	
-	// Activation hook
-	// public static function activate() {
-	//     $db_handler = new DatabaseHandler();
-	//     $db_handler->createLocationsTable();
-	//     $db_handler->createInventoryTable();
-
-	//     // Create the API key option if it doesn't exist
-	//     $api_key = get_option('wc_squared_api_key');
-	//     if (empty($api_key)) {
-	//         add_option('wc_squared_api_key', '');
-	//     }
-	// }
 
 	/**
 	 * Gets the main plugin loader instance.
