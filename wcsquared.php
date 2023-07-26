@@ -79,8 +79,15 @@ class WCSquared {
 
 			if ($api_response->isSuccess()) {
 				$result = $api_response->getResult();
-				
-				$locations = $result->getLocations();
+				$locations = [];
+
+				foreach ($result->getLocations() as $location) {
+					if ($location->getStatus() === "INACTIVE") {
+						continue;
+					}
+	
+					$locations[] = $location;
+				}
 		
 				// Store the locations in a WP option
 				update_option('square_locations', $locations);
