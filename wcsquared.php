@@ -50,7 +50,19 @@ class WCSquared {
 
 		// register plugin namespace with autoloader
 		$loader->addPsr4( 'WCSquared\\', __DIR__ . '/includes' );
+
+		$this->register_settings();
 	}
+
+	public function register_settings() {
+		$locations = get_option('square_locations');
+
+		if ($locations) {
+			foreach ($locations as $location) {
+				register_setting('wcsquared', 'wc_squared_pickup_location_' . $location->getId());
+			}
+		}
+	}	
 
 	public function register_settings_page() {
 		add_options_page(
@@ -64,16 +76,16 @@ class WCSquared {
 
 	public function fetch_square_locations() {
 		
-        $api_key = get_option('wc_squared_api_key', null);
-        $environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
+		$api_key = get_option('wc_squared_api_key', null);
+		$environment = get_option('wc_squared_environment', 'sandbox'); // Default to sandbox if the option is not set
 
-        // Use the environment variable to set the SquareClient configuration
-        $client = new SquareClient([
-            'accessToken' => $api_key,
-            'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
-        ]);
-        
-        $api_response = $client->getLocationsApi()->listLocations();
+		// Use the environment variable to set the SquareClient configuration
+		$client = new SquareClient([
+			'accessToken' => $api_key,
+			'environment' => ($environment === 'sandbox') ? Environment::SANDBOX : Environment::PRODUCTION,
+		]);
+		
+		$api_response = $client->getLocationsApi()->listLocations();
 
 		try {
 
@@ -101,6 +113,11 @@ class WCSquared {
 	}
 
 	public function settings_page() {
+		// Fetch all Local Pickup Plus locations
+		$pickup_locations = get_posts(array(
+			'post_type' => 'wc_pickup_location',
+			'numberposts' => -1,
+		));
 		?>
 		<div class="wrap">
 			<h1><?php echo get_admin_page_title(); ?></h1>
@@ -110,14 +127,28 @@ class WCSquared {
 	
 			if ($locations) {
 				echo '<h2>Locations</h2>';
+				echo '<form method="post" action="options.php">';
+				settings_fields('wcsquared'); // this should match the option group name used in register_setting
+				do_settings_sections('wcsquared'); // the page slug for your settings sections
+	
 				echo '<ol>';
 	
-				// Print the location names
+				// Print the location names and dropdowns
 				foreach ($locations as $location) {
-					echo '<li>' . $location->getName() . '</li>';
+					$selected_pickup_location = get_option('wc_squared_pickup_location_' . $location->getId());
+					echo '<li>' . $location->getName();
+	
+					echo '<select name="wc_squared_pickup_location_' . $location->getId() . '">';
+					foreach ($pickup_locations as $pickup_location) {
+						echo '<option value="' . $pickup_location->ID . '" ' . selected($selected_pickup_location, $pickup_location->ID, false) . '>' . $pickup_location->post_title . '</option>';
+					}
+					echo '</select>';
+					echo '</li>';
 				}
 	
 				echo '</ol>';
+				submit_button();
+				echo '</form>';
 			} else {
 				echo '<p>No locations found.</p>';
 			}
@@ -125,7 +156,7 @@ class WCSquared {
 		</div>
 		<?php
 	}
-				
+					
 	/**
 	 * Gets the main plugin instance.
 	 *
